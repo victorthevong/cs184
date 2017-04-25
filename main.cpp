@@ -93,6 +93,35 @@ void display(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // // Draw a white grid "floor" for the tetrahedron to sit on.
+    // glColor3f(1.0, 1.0, 1.0);
+    // glBegin(GL_LINES);
+    // for (GLfloat i = -2.5; i <= 2.5; i += 0.25) {
+    //     glVertex3f(i, 0, 2.5); glVertex3f(i, 0, -2.5);
+    //     glVertex3f(2.5, 0, i); glVertex3f(-2.5, 0, i);
+    // }
+    // glEnd();
+
+    glColor3f(.3,.3,.3);
+    glBegin(GL_QUADS);
+    glVertex3f( 0,-0.001, 0);
+    glVertex3f( 0,-0.001,10);
+    glVertex3f(10,-0.001,10);
+    glVertex3f(10,-0.001, 0);
+    glEnd();
+
+    glBegin(GL_LINES);
+    for(int i=0;i<=10;i++) {
+        if (i==0) { glColor3f(.6,.3,.3); } else { glColor3f(.25,.25,.25); };
+        glVertex3f(i,0,0);
+        glVertex3f(i,0,10);
+        if (i==0) { glColor3f(.3,.3,.6); } else { glColor3f(.25,.25,.25); };
+        glVertex3f(0,0,i);
+        glVertex3f(10,0,i);
+    };
+    glEnd();
+
+
     // your drawing code goes here
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
