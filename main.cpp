@@ -101,26 +101,24 @@ void display(void)
     //     glVertex3f(2.5, 0, i); glVertex3f(-2.5, 0, i);
     // }
     // glEnd();
+    // Test plane;
 
     glColor3f(.3,.3,.3);
     glBegin(GL_QUADS);
-    glVertex3f( 0,-0.001, 0);
-    glVertex3f( 0,-0.001,10);
-    glVertex3f(10,-0.001,10);
-    glVertex3f(10,-0.001, 0);
+    glVertex3f(0, -2, 0);
+    glVertex3f(0, -2, 10);
+    glVertex3f(10, -2, 10);
+    glVertex3f(10, -2, 0);
     glEnd();
-
-    glBegin(GL_LINES);
-    for(int i=0;i<=10;i++) {
-        if (i==0) { glColor3f(.6,.3,.3); } else { glColor3f(.25,.25,.25); };
-        glVertex3f(i,0,0);
-        glVertex3f(i,0,10);
-        if (i==0) { glColor3f(.3,.3,.6); } else { glColor3f(.25,.25,.25); };
-        glVertex3f(0,0,i);
-        glVertex3f(10,0,i);
-    };
+/*
+    glColor3f(.5,.5,.5);
+    glBegin(GL_QUADS);
+    glVertex3f(-0.1, -.2, 3);
+    glVertex3f(-0.1, -.2, 1);
+    glVertex3f(0.1, -.2, 1o);
+    glVertex3f(0.1, -.2, 3);
     glEnd();
-
+*/
 
     // your drawing code goes here
     glMatrixMode(GL_PROJECTION);

@@ -11,18 +11,10 @@
 #endif
 
 class Plane {
-public:
-    Plane();
-    double intersect();
-
-private:
-    glm::dvec3 center;
-    glm::dvec3 normal;
-    glm::dvec3 botleftcorner;
-    glm::dvec3 topleftcorner;
-    glm::dvec3 botrightcorner;
-    glm::dvec3 toprightcorner;
-    
+	public:
+		Plane();
+    	Plane(const std::vector<glm::dvec3> &v);
+    	bool intersect(glm::dvec3 pos, double rad);
 };
 
 #endif /* PLANE_H */

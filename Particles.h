@@ -35,6 +35,7 @@ private:
         glm::dvec3 v;
         glm::dvec3 forces;
         double mass;
+        double radius;
     };
     
     std::vector<Particle> particles;
