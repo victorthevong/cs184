@@ -79,3 +79,30 @@ void Parser::render() {
 	}
 	glEnd();
 }
+
+// Compute barycentric coordinates (u, v, w) for poly triangle
+// point testpoint with respect to triangle (a, b, c)
+bool Parser::point_in_triangle(Polygon poly, dvec3 testpoint){
+
+	dvec3 a, b, c;
+
+	a = vertices[poly.p0];
+	b = vertices[poly.p1];
+	c = vertices[poly.p2];
+
+	dvec3 v0 = b - a, v1 = c - a, v2 = testpoint - a;
+
+    float d00 = dot(v0, v0);
+    float d01 = dot(v0, v1);
+    float d11 = dot(v1, v1);
+    float d20 = dot(v2, v0);
+    float d21 = dot(v2, v1);
+    float denom = d00 * d11 - d01 * d01;
+
+    float v = (d11 * d20 - d01 * d21) / denom;
+    float w = (d00 * d21 - d01 * d20) / denom;
+    float u = 1.0f - v - w;
+
+    // Check if point is in triangle
+	return (v >= 0) && (w >= 0) && (v + w < 1);
+}
