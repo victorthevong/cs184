@@ -13,9 +13,8 @@
 
 #include "Particles.h"
 #include "math.h"
-#include "Plane.h"
 #include <vector>
-const double GRAV_CONST = .00001; // Gravitational constant
+const double GRAV_CONST = .0000000000000001; // Gravitational constant
 const double PARTICLE_RAD = 0.05;
 const double VOLUME_DENSITY = .001; //In g / mm^3
 const double render_step = 3;
@@ -85,13 +84,6 @@ void Particles::render() const
 }
 
 void Particles::step() {
-    glm::dvec3 point_vals[4] = {glm::dvec3(100,-0.001, 0), glm::dvec3(100,-0.001,10), 
-    glm::dvec3(200,-0.001,10), glm::dvec3(200,-0.001, 0)};
-    std::vector<glm::dvec3> points = std::vector<glm::dvec3>();
-    points.push_back(point_vals[0]);
-    points.push_back(point_vals[1]);
-    points.push_back(point_vals[2]);
-    points.push_back(point_vals[3]);
 
     //Plane test_plane = Plane(points);
     for (Particle &par : particles) { 

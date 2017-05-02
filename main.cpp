@@ -1,8 +1,8 @@
-#define OUTPUT_ANIMATION 0
+#define OUTPUT_ANIMATION 1
 
 #include <stdlib.h>
 #include <stdio.h>
-
+#include "Parser.h"
 #include "Particles.h"
 
 #if OUTPUT_ANIMATION
@@ -25,7 +25,7 @@ const int render_step = 3;
 int mx, my;
 
 Particles particles;
-
+Parser parser;
 void display(void);
 
 void reshape(int width, int height);
@@ -65,6 +65,11 @@ void keyboard(unsigned char c, int x, int y)
 
 int main(int argc, char** argv)
 {
+    // Parse the scene into parser 
+    parser = Parser();
+    if (argc ==  2) {
+        parser.parse(argv[1]);
+    }
     glutInit(&argc, argv);
 
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
@@ -92,33 +97,7 @@ void reshape(int w, int h)
 void display(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // // Draw a white grid "floor" for the tetrahedron to sit on.
-    // glColor3f(1.0, 1.0, 1.0);
-    // glBegin(GL_LINES);
-    // for (GLfloat i = -2.5; i <= 2.5; i += 0.25) {
-    //     glVertex3f(i, 0, 2.5); glVertex3f(i, 0, -2.5);
-    //     glVertex3f(2.5, 0, i); glVertex3f(-2.5, 0, i);
-    // }
-    // glEnd();
-    // Test plane;
-
-    glColor3f(.3,.3,.3);
-    glBegin(GL_QUADS);
-    glVertex3f(0, -2, 0);
-    glVertex3f(0, -2, 10);
-    glVertex3f(10, -2, 10);
-    glVertex3f(10, -2, 0);
-    glEnd();
-/*
-    glColor3f(.5,.5,.5);
-    glBegin(GL_QUADS);
-    glVertex3f(-0.1, -.2, 3);
-    glVertex3f(-0.1, -.2, 1);
-    glVertex3f(0.1, -.2, 1o);
-    glVertex3f(0.1, -.2, 3);
-    glEnd();
-*/
+    
 
     // your drawing code goes here
     glMatrixMode(GL_PROJECTION);
@@ -129,7 +108,7 @@ void display(void)
             0, 1, 0);
     
     particles.render();
-
+    parser.render();
     glutSwapBuffers();
 }
 
