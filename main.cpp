@@ -9,6 +9,18 @@
 #include <opencv2/opencv.hpp>
 #endif
 
+using namespace cv;
+using namespace std;
+
+/* Notes to Blake
+whenever you run for a new video file delete the old one. I dont have it overwrite the file yet.
+The png images should be overriden. If they arent delete the "result" folder and make a new one with the same name
+
+*/
+
+int start = 0; // victor added
+
+VideoWriter oVideoWriter; // victor added
 
 inline float clip(const float& n, const float& lower, const float& upper) 
 {
@@ -32,22 +44,57 @@ void reshape(int width, int height);
 
 void idle(void)
 {
-    particles.step();
-    glutPostRedisplay();
-    if(frame/render_step >= 300)
-        return;
-    if(frame%render_step == 0)
-    {
-        #if OUTPUT_ANIMATION
-        cv::Mat3b image(height, width);
-        glReadPixels(0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, image.data);
-        cv::flip(image, image, 0);
-        char fn[512];
-        sprintf(fn, "result/%04d.png", frame/render_step);
-        cv::imwrite(fn, image);
-        #endif
+
+    if (start) {
+        particles.step();
+        glutPostRedisplay();
+        if(frame/render_step >= 300){
+            return;
+        }
+        if(frame%render_step == 0)
+        {
+
+            // window detection has to be based on glm library 
+
+            #if OUTPUT_ANIMATION
+            cv::Mat3b image(height, width);
+            glReadPixels(0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, image.data);
+            cv::flip(image, image, 0);
+            char fn[512];
+            // sprintf(fn, "result/%04d.jpeg", frame/render_step);
+            sprintf(fn, "result/%04d.png", frame/render_step);
+            cv::imwrite(fn, image);
+            // fprintf(stderr,"Finishes writing image\n");
+
+            if (!oVideoWriter.isOpened()) {
+                Mat image;
+                image = imread("result/0000.png", CV_LOAD_IMAGE_COLOR);  // first png created
+                oVideoWriter.open("path/MyVideo.mp4", CV_FOURCC('M','P','4','2'), 15, image.size(), true); // mpeg-4 is the fourcc code
+            }
+
+            oVideoWriter.write(image);
+
+            #endif
+        }
+        frame++;
     }
-    frame++;
+
+    // particles.step();
+    // glutPostRedisplay();
+    // if(frame/render_step >= 300)
+    //     return;
+    // if(frame%render_step == 0)
+    // {
+    //     #if OUTPUT_ANIMATION
+    //     cv::Mat3b image(height, width);
+    //     glReadPixels(0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, image.data);
+    //     cv::flip(image, image, 0);
+    //     char fn[512];
+    //     sprintf(fn, "result/%04d.png", frame/render_step);
+    //     cv::imwrite(fn, image);
+    //     #endif
+    // }
+    // frame++;
 }
 
 void mouse(int button, int state, int x, int y);
@@ -60,6 +107,16 @@ void keyboard(unsigned char c, int x, int y)
     {
     case 'o' :
         break;
+    case 's' : // start/stop
+        if (start == 0) {
+            start = 1;
+        } else {
+            start = 0;
+        }
+        break;
+    case 'e' : // exit
+        exit(0);
+        break;
     }
 }
 
@@ -70,21 +127,42 @@ int main(int argc, char** argv)
     if (argc ==  2) {
         parser.parse(argv[1]);
     }
+
     glutInit(&argc, argv);
 
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowSize(width, height);
 
+     // had to switch order to allow keyboard use
+
     (void)glutCreateWindow("GLUT Program");
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
-    glutIdleFunc(idle);
+    glutKeyboardFunc(keyboard);
     glutMouseFunc(mouse);
     glutMotionFunc(motion);
+    glutIdleFunc(idle);
     glutMainLoop();
-    glutKeyboardFunc(keyboard);
+
+    oVideoWriter.release();
 
     return EXIT_SUCCESS;
+
+    // glutInit(&argc, argv);
+
+    // glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
+    // glutInitWindowSize(width, height);
+
+    // (void)glutCreateWindow("GLUT Program");
+    // glutDisplayFunc(display);
+    // glutReshapeFunc(reshape);
+    // glutIdleFunc(idle);
+    // glutMouseFunc(mouse);
+    // glutMotionFunc(motion);
+    // glutMainLoop();
+    // glutKeyboardFunc(keyboard);
+
+    // return EXIT_SUCCESS;
 }
 
 void reshape(int w, int h)
