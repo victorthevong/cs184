@@ -82,6 +82,13 @@ void Parser::render() {
 
 // Compute barycentric coordinates (u, v, w) for poly triangle
 // point testpoint with respect to triangle (a, b, c)
+
+/*
+Note that a decent number of values in point_in_triangle() are independent of
+ testpoint—they can be cached with the triangle if necessary for speedup.
+  assuming the number of triangles you have isnt overwhelming
+*/
+
 bool Parser::point_in_triangle(Polygon poly, dvec3 testpoint){
 
 	dvec3 a, b, c;
