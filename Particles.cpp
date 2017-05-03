@@ -22,7 +22,7 @@
 
 typedef glm::ivec3 ivec3;
 
-const double GRAV_CONST = .001; // Gravitational constant
+const double GRAV_CONST = .00001; // Gravitational constant
 const double PARTICLE_RAD = 0.02;
 const double VOLUME_DENSITY = .001; //In g / mm^3
 const double render_step = 3;
@@ -30,9 +30,9 @@ const double render_step = 3;
 
 Particles::Particles() 
 {
-    int nx = 3;
-    int ny = 3;
-    int nz = 3;
+    int nx = 5;
+    int ny = 5;
+    int nz = 5;
     float d = 0.1;
     
     // Mass = dW*dH*dD*rho /(W*H*D)
@@ -147,7 +147,7 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
 
     // Forces on particle;
     int numIters = 5;
-    double rho_0 = VOLUME_DENSITY;
+    double rho_0 = 100;
     dvec3 r;
     double rlen;
     for (int i = 0; i < numIters; i++) {
@@ -161,12 +161,9 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
                 rho_i += poly6Kern(length(par.x_approx - n.x_approx), h);
                 r = par.x_approx - n.x_approx;
                 rlen = length(r);
-                if (rlen > 0.0) {
-                denom += pow(length((45.0 / (M_PI * pow(h,6.0))) * pow((h - rlen), 2.0) * (r / rlen)), 2.0);
-                fprintf(stderr, "denom: %f\n",denom);
-                fprintf(stderr, "rlen %f h %f i %u\n",rlen, h, i);
-                fprintf(stderr, "grad %f\n", 45.0 / (M_PI * pow(h,6.0)));
-            }
+                denom += pow(length((45.0 / (M_PI * pow(h,6.0))) * pow((h - rlen), 2.0) * (r / (rlen + .00000000000001))), 2.0);
+                    //fprintf(stderr, "denom: %f\n",denom);
+                    //fprintf(stderr, "rlen %f h %f i %u\n",rlen, h, i);
             }
 
 
@@ -175,10 +172,11 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
             denom /= rho_0;
 
             par.rho_i = rho_i;
+            
+            //fprintf((stderr), "%f \n", par.rho_i);
+            //fprintf(stderr, "rho_i %f rho_0 %f\n", rho_i, rho_0);
 
-            // fprintf(stderr, "rho_i %f rho_0 %f\n", rho_i, rho_0);
-
-            par.lambda_i = ((par.rho_i / rho_0) - 1.0);
+            par.lambda_i = -1.0*((par.rho_i / rho_0) - 1.0);
             par.lambda_i /= denom;
 
         }
@@ -202,7 +200,7 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
             correction /= rho_0;
             par.correction_vec = correction;
 
-             // fprintf(stderr, "correction_vec %s\n", glm::to_string(par.correction_vec).c_str());
+             /*// fprintf(stderr, "correction_vec %s\n", glm::to_string(par.correction_vec).c_str());
              // collisions
              double count = 0;
              dvec3 avg(0.0,0.0,0.0);
@@ -216,8 +214,7 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
              
              if (count != 0) {
                  par.x_approx += (avg / count);
-             }
-            
+             }*/ 
             for (Polygon poly : polys) {
 
                 dvec3 origin = par.x;
@@ -267,12 +264,11 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
 
     for (Particle &par : particles) {
         par.v = (1/render_step) * (par.x_approx - par.x);
-        //vorticity and viscosity
+        //vorticity and viscosity   
         par.x = par.x_approx;
 
     }
-    }
-    }
+}
         
 
 
