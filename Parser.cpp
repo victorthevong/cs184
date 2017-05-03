@@ -62,6 +62,7 @@ void Parser::parse(string fp) {
 	}
 }
 void Parser::render() {
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glBegin(GL_TRIANGLES);
 	for (int i = 0; i < num_polygons; i++) {
 		Polygon p = polys[i];
@@ -73,6 +74,7 @@ void Parser::render() {
 		glVertex3d(v2[0], v2[1], v2[2]);	
 	}
 	glEnd();
+	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 }
 
 // Compute barycentric coordinates (u, v, w) for poly triangle

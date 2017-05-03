@@ -1,4 +1,7 @@
-#include <vector>
+#ifndef PARSER_H
+#define PARSER_H
+
+#include "Polygon.h"
 #include "glm/glm.hpp"
 #include <vector>
 #include <string>
@@ -12,13 +15,6 @@
 #endif
 typedef glm::dvec3 dvec3;
 typedef std::string string;
-typedef std::vector<dvec3> PointVec;
-struct Polygon {
-	int p0; // List of indices into vertex array.
-	int p1;
-	int p2;
-};
-typedef std::vector<Polygon> PolyVec;
 class Parser {
 	public:
 		Parser();
@@ -31,3 +27,5 @@ class Parser {
 		int num_vertices;
 		int num_polygons;
 };
+
+#endif

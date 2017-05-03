@@ -14,7 +14,9 @@
 #include "Particles.h"
 #include "math.h"
 #include <vector>
-const double GRAV_CONST = .0000000000000001; // Gravitational constant
+#include "Parser.h"
+
+const double GRAV_CONST = .0000001; // Gravitational constant
 const double PARTICLE_RAD = 0.05;
 const double VOLUME_DENSITY = .001; //In g / mm^3
 const double render_step = 3;
@@ -36,7 +38,7 @@ Particles::Particles()
             for(int z=0; z<nz; z++)
             {  
                 Particle par;
-                par.p = glm::dvec3((x+0.5-nx*0.5)*d, (y+0.5)*d-1.0, (z+0.5-nz*0.5)*d);
+                par.x = glm::dvec3((x+0.5-nx*0.5)*d, (y+10)*d-1.0, (z+0.5-nz*0.5)*d);
                 par.forces = glm::dvec3(0, 0, 0);
                 par.mass = mass;
                 par.radius = PARTICLE_RAD;
@@ -65,17 +67,17 @@ void Particles::render() const
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glColorMaterial(GL_FRONT, GL_DIFFUSE);
-    glColor4f(0.2, 0.5, 0.8, .3);
+    glColor4f(0.2, 0.5, 0.8, 1);
     glColorMaterial(GL_FRONT, GL_SPECULAR);
-    glColor4f(0.9, 0.9, 0.9, .3);
+    glColor4f(0.9, 0.9, 0.9, 1);
     glColorMaterial(GL_FRONT, GL_AMBIENT);
-    glColor4f(0.2, 0.5, 0.8, .3);
+    glColor4f(0.2, 0.5, 0.8, 1);
     
     for(const Particle &par : particles)
     {    
         
         glPushMatrix();
-        glTranslatef(par.p.x, par.p.y, par.p.z);
+        glTranslatef(par.x.x, par.x.y, par.x.z);
         glutSolidSphere(PARTICLE_RAD, 10, 10);
         glPopMatrix();
     }
@@ -83,7 +85,7 @@ void Particles::render() const
     glPopAttrib();
 }
 
-void Particles::step() {
+void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) {
 
     //Plane test_plane = Plane(points);
     for (Particle &par : particles) { 
@@ -92,18 +94,60 @@ void Particles::step() {
     }
 
     for (Particle &par : particles) {
-        par.p += par.v * render_step;
         par.v += (1.0 / par.mass) * par.forces * render_step; 
+        par.x_approx = par.x + (par.v * render_step);
     }
+    // Collision Check
+    for (Particle &par : particles) {
+        
+        for (Polygon poly : polys) {
+
+            dvec3 origin = par.x;
+            dvec3 dir = par.x_approx - par.x;
+
+            dvec3 a, b, c;
+
+            a = verts[poly.p0];
+            b = verts[poly.p1];
+            c = verts[poly.p2];
+
+            dvec3 e1 = b - a;
+            dvec3 e2 = c - a;
+            dvec3 s0 = origin - a;
+            dvec3 s1 = cross(dir, e2);
+            dvec3 s2 = cross(s0, e1);
+
+            dvec3 solution = dvec3(dot(s2, e2), dot(s1, s0), dot(s2, dir));
+
+            solution /= dot(s1, e1);
+
+            double t = solution[0];
+            double b1 = solution[1];
+            double b2 = solution[2];
+            bool isvalid = ((b1 >= 0) && (b2 >= 0) && (b1 + b2 < 1));
+
+            dvec3 intersect_pt = origin + (dir*t);
+            double delta = length(par.x_approx - origin) - length(intersect_pt - origin);
+
+            if (isvalid && delta > 0) {
+                par.x_approx = intersect_pt;
+            } 
+
+        }
+
+        par.x = par.x_approx;
+        
+    }
+
 }
 
 // void Particle::intersect(Parser parser) {
 
 //     for (Polygon poly: parser.polys) {
 
-
-
 //     }
+
+// }
 
 // bool Particle::intersect_helper(dvec3 origin, dvec3 dir) {
     

@@ -16,6 +16,8 @@
 
 #include "glm/glm.hpp"
 #include <vector>
+#include "Polygon.h"
+
 #if defined(__APPLE_CC__)
 #include <GLUT/glut.h>
 #else
@@ -27,17 +29,18 @@ class Particles {
 public:
     Particles();
     void render() const;
-    void step(); // simulate one frame
+    void step(PolyVec polys, PointVec verts); // simulate one frame
 private:
     struct Particle
     {
         // public:
-        glm::dvec3 p;
+        glm::dvec3 x;
+        glm::dvec3 x_approx;
         glm::dvec3 v;
         glm::dvec3 forces;
         double mass;
         double radius;
-            // void intersect(Parser parser);
+        // void intersect(Parser parser);
 
         // private:
             // bool intersect_helper(dvec3 origin, dvec3 dir);

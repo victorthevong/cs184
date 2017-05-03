@@ -46,7 +46,7 @@ void idle(void)
 {
 
     if (start) {
-        particles.step();
+        particles.step(parser.polys, parser.vertices);
         glutPostRedisplay();
         if(frame/render_step >= 300){
             return;
