@@ -31,11 +31,16 @@ public:
 private:
     struct Particle
     {
+        // public:
         glm::dvec3 p;
         glm::dvec3 v;
         glm::dvec3 forces;
         double mass;
         double radius;
+            // void intersect(Parser parser);
+
+        // private:
+            // bool intersect_helper(dvec3 origin, dvec3 dir);
     };
     
     std::vector<Particle> particles;

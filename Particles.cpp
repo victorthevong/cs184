@@ -97,6 +97,20 @@ void Particles::step() {
     }
 }
 
+// void Particle::intersect(Parser parser) {
+
+//     for (Polygon poly: parser.polys) {
+
+
+
+//     }
+
+// bool Particle::intersect_helper(dvec3 origin, dvec3 dir) {
+    
+// }
+
+// }
+
 
 
 

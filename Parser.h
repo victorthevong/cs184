@@ -24,7 +24,6 @@ class Parser {
 		Parser();
 		void parse(string fp); // Parse given obj file into vectors
 		void render();
-		bool point_in_triangle(Polygon poly, dvec3 testpoint);
 		PolyVec polys;
 		PointVec vertices;
 		
