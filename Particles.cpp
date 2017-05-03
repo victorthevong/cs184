@@ -15,18 +15,24 @@
 #include "math.h"
 #include <vector>
 #include "Parser.h"
+#include <iostream>
+#include <map>
+#include "String.h"
+#include "glm/ext.hpp"
 
-const double GRAV_CONST = .0000001; // Gravitational constant
-const double PARTICLE_RAD = 0.05;
+typedef glm::ivec3 ivec3;
+
+const double GRAV_CONST = .001; // Gravitational constant
+const double PARTICLE_RAD = 0.02;
 const double VOLUME_DENSITY = .001; //In g / mm^3
 const double render_step = 3;
 
 
 Particles::Particles() 
 {
-    int nx = 10;
-    int ny = 10;
-    int nz = 10;
+    int nx = 3;
+    int ny = 3;
+    int nz = 3;
     float d = 0.1;
     
     // Mass = dW*dH*dD*rho /(W*H*D)
@@ -42,6 +48,7 @@ Particles::Particles()
                 par.forces = glm::dvec3(0, 0, 0);
                 par.mass = mass;
                 par.radius = PARTICLE_RAD;
+                par.neighbors = std::vector<Particle>();
                 particles.push_back(par);
             }
         }
@@ -85,75 +92,189 @@ void Particles::render() const
     glPopAttrib();
 }
 
+double poly6Kern(double r, double h) {
+    double cofactor = 315.0 / (64.0 * M_PI * pow(h, 9.0));
+    if (r <= h && r >= 0.0) {
+        return cofactor * pow((h*h - r*r),3.0);
+    }
+    return 0.0;
+}
+
 void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) {
-
-    //Plane test_plane = Plane(points);
-    for (Particle &par : particles) { 
-        // Add in gravitational force
-        par.forces[1] -= GRAV_CONST*par.mass;
-    }
-
     for (Particle &par : particles) {
-        par.v += (1.0 / par.mass) * par.forces * render_step; 
+        par.forces[1] = -GRAV_CONST;
+        par.v += par.forces * render_step; 
         par.x_approx = par.x + (par.v * render_step);
+        par.neighbors.clear();
     }
-    // Collision Check
+
+    // Neighbor Find
+    double h = .15; // 2 x average particle distance
+    int i = 0;
+    std::map<std::string, std::vector<Particle>> neighbor_map;
     for (Particle &par : particles) {
-        
-        for (Polygon poly : polys) {
+        ivec3 k = ivec3((int) floor(par.x_approx / h)[0], (int) floor(par.x_approx / h)[1], (int) floor(par.x_approx / h)[2]);
+        std::string key = glm::to_string(k);
+        if (neighbor_map.find(key) == neighbor_map.end()) {
+            std::vector<Particle> bin = std::vector<Particle>();
+            neighbor_map[key] = bin;
+        }
+        neighbor_map[key].push_back(par);
 
-            dvec3 origin = par.x;
-            dvec3 dir = par.x_approx - par.x;
+    }
+    for (Particle& par : particles) {
+        dvec3 flooredvec = floor(par.x_approx / h);
+        std::string key = glm::to_string(flooredvec);
+        for (int i = -1; i < 2; i++) {
+            for (int j = -1; j < 2; j++) {
+                for (int k = -1; k < 2; k++) {
+                    std::string key_prime = glm::to_string(ivec3((int) flooredvec[0] + i, (int) flooredvec[1] + j, (int) flooredvec[2] + k));
+                    if (neighbor_map.find(key_prime) != neighbor_map.end()) {
+                        std::vector<Particle> bin = neighbor_map[key_prime];
+                        for (Particle n : bin) {
+                            if (length(n.x_approx - par.x_approx) <= h) {
+                                par.neighbors.push_back(n);
+                            }
+                        }
+                           
+                    } 
+                }
+            }
+        }
+        //printf("%ld neighbors \n", par.neighbors.size());
+    }
 
-            dvec3 a, b, c;
 
-            a = verts[poly.p0];
-            b = verts[poly.p1];
-            c = verts[poly.p2];
+    // Forces on particle;
+    int numIters = 5;
+    double rho_0 = VOLUME_DENSITY;
+    dvec3 r;
+    double rlen;
+    for (int i = 0; i < numIters; i++) {
 
-            dvec3 e1 = b - a;
-            dvec3 e2 = c - a;
-            dvec3 s0 = origin - a;
-            dvec3 s1 = cross(dir, e2);
-            dvec3 s2 = cross(s0, e1);
+        for (Particle &par : particles) {
+            double rho_i = 0.0;
+            double denom = 0.0;
 
-            dvec3 solution = dvec3(dot(s2, e2), dot(s1, s0), dot(s2, dir));
+            for (Particle n : par.neighbors) {
 
-            solution /= dot(s1, e1);
+                rho_i += poly6Kern(length(par.x_approx - n.x_approx), h);
+                r = par.x_approx - n.x_approx;
+                rlen = length(r);
+                if (rlen > 0.0) {
+                denom += pow(length((45.0 / (M_PI * pow(h,6.0))) * pow((h - rlen), 2.0) * (r / rlen)), 2.0);
+                fprintf(stderr, "denom: %f\n",denom);
+                fprintf(stderr, "rlen %f h %f i %u\n",rlen, h, i);
+                fprintf(stderr, "grad %f\n", 45.0 / (M_PI * pow(h,6.0)));
+            }
+            }
 
-            double t = solution[0];
-            double b1 = solution[1];
-            double b2 = solution[2];
-            bool isvalid = ((b1 >= 0) && (b2 >= 0) && (b1 + b2 < 1));
 
-            dvec3 intersect_pt = origin + (dir*t);
-            double delta = length(par.x_approx - origin) - length(intersect_pt - origin);
+            //come back to later algo may be different
 
-            if (isvalid && delta > 0) {
-                par.x_approx = intersect_pt;
-            } 
+            denom /= rho_0;
+
+            par.rho_i = rho_i;
+
+            // fprintf(stderr, "rho_i %f rho_0 %f\n", rho_i, rho_0);
+
+            par.lambda_i = ((par.rho_i / rho_0) - 1.0);
+            par.lambda_i /= denom;
 
         }
 
-        par.x = par.x_approx;
-        
+        for (Particle& par : particles) {
+            dvec3 correction(0.0,0.0,0.0);
+
+            // fprintf(stderr, "par neighbor size %lu \n", par.neighbors.size());
+
+            for (Particle& n : par.neighbors) {
+
+            if ((par.x_approx[0] != n.x_approx[0] && par.x_approx[1] != n.x_approx[1] && par.x_approx[2] != n.x_approx[2])) {
+                r = par.x_approx - n.x_approx;
+                rlen = length(r);
+                dvec3 grad = (45.0 / (M_PI * pow(h,6.0))) * pow((h - rlen), 2.0) * (r / rlen);
+                correction += (par.lambda_i + n.lambda_i) * grad;
+              }
+                
+            }
+
+            correction /= rho_0;
+            par.correction_vec = correction;
+
+             // fprintf(stderr, "correction_vec %s\n", glm::to_string(par.correction_vec).c_str());
+             // collisions
+             double count = 0;
+             dvec3 avg(0.0,0.0,0.0);
+             for (Particle& p2 : particles) {
+                 if (length(par.x_approx - p2.x_approx) < (2.0*PARTICLE_RAD) && (par.x_approx[0] != p2.x_approx[0] && par.x_approx[1] != p2.x_approx[1] && par.x_approx[2] != p2.x_approx[2])) {
+                     dvec3 unitvec = (par.x_approx - p2.x_approx) / length(par.x_approx - p2.x_approx);
+                     dvec3 temp = p2.x_approx + ((2.0*PARTICLE_RAD) * unitvec);
+                     avg += temp - par.x_approx;
+                     count += 1;
+                 }
+             
+             if (count != 0) {
+                 par.x_approx += (avg / count);
+             }
+            
+            for (Polygon poly : polys) {
+
+                dvec3 origin = par.x;
+                dvec3 dir = par.x_approx - par.x;
+
+                dvec3 a, b, c;
+
+                a = verts[poly.p0];
+                b = verts[poly.p1];
+                c = verts[poly.p2];
+
+                dvec3 e1 = b - a;
+                dvec3 e2 = c - a;
+                dvec3 s0 = origin - a;
+                dvec3 s1 = cross(dir, e2);
+                dvec3 s2 = cross(s0, e1);
+
+                dvec3 solution = dvec3(dot(s2, e2), dot(s1, s0), dot(s2, dir));
+
+                solution /= dot(s1, e1);
+
+                double t = solution[0];
+                double b1 = solution[1];
+                double b2 = solution[2];
+                bool isvalid = ((b1 >= 0) && (b2 >= 0) && (b1 + b2 < 1));
+
+                dvec3 intersect_pt = origin + (dir*t);
+                double delta = length(par.x_approx - origin) - length(intersect_pt - origin);
+
+                if (isvalid && delta > 0) {
+                    par.x_approx = intersect_pt;
+                } 
+
+            }
+            
+        }
+
+
+        for (Particle &par : particles) {
+            par.x_approx += par.correction_vec;
+        }
+
     }
 
-}
 
-// void Particle::intersect(Parser parser) {
+    // update velocity and position
 
-//     for (Polygon poly: parser.polys) {
+    for (Particle &par : particles) {
+        par.v = (1/render_step) * (par.x_approx - par.x);
+        //vorticity and viscosity
+        par.x = par.x_approx;
 
-//     }
+    }
+    }
+    }
+        
 
-// }
-
-// bool Particle::intersect_helper(dvec3 origin, dvec3 dir) {
-    
-// }
-
-// }
 
 
 

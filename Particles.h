@@ -38,12 +38,12 @@ private:
         glm::dvec3 x_approx;
         glm::dvec3 v;
         glm::dvec3 forces;
+        double rho_i;
         double mass;
         double radius;
-        // void intersect(Parser parser);
-
-        // private:
-            // bool intersect_helper(dvec3 origin, dvec3 dir);
+        double lambda_i;
+        glm::dvec3 correction_vec;
+        std::vector<Particle> neighbors;
     };
     
     std::vector<Particle> particles;
