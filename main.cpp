@@ -69,7 +69,7 @@ void idle(void)
             if (!oVideoWriter.isOpened()) {
                 Mat image;
                 image = imread("result/0000.png", CV_LOAD_IMAGE_COLOR);  // first png created
-                oVideoWriter.open("path/MyVideo.mp4", CV_FOURCC('M','P','4','2'), 30, image.size(), true); // mpeg-4 is the fourcc code
+                oVideoWriter.open("path/MyVideo.mp4", CV_FOURCC('M','P','4','2'), 5, image.size(), true); // mpeg-4 is the fourcc code
             }
 
             oVideoWriter.write(image);

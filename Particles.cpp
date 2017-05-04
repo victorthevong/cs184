@@ -23,17 +23,17 @@
 typedef glm::ivec3 ivec3;
 
 const double GRAV_CONST = .001; // Gravitational constant
-const double PARTICLE_RAD = 0.02;
+const double PARTICLE_RAD = 0.05;
 const double VOLUME_DENSITY = .001; //In g / mm^3
 const double render_step = 3;
 
 
 Particles::Particles() 
 {
-    int nx = 3;
-    int ny = 3;
-    int nz = 3;
-    float d = 0.1;
+    int nx = 10;
+    int ny = 15;
+    int nz = 10;
+    float d = .1;
     
     // Mass = dW*dH*dD*rho /(W*H*D)
     double mass = (4.0 / 3.0) * M_PI * pow(PARTICLE_RAD, 3.0) * VOLUME_DENSITY / (nx*nz*ny);
@@ -44,7 +44,7 @@ Particles::Particles()
             for(int z=0; z<nz; z++)
             {  
                 Particle par;
-                par.x = glm::dvec3((x+0.5-nx*0.5)*d, (y+10)*d-1.0, (z+0.5-nz*0.5)*d);
+                par.x = glm::dvec3((x+0.5-nx*0.5)*d, (y+10.0)*d-1.0, (z+0.5-nz*0.5)*d);
                 par.forces = glm::dvec3(0, 0, 0);
                 par.mass = mass;
                 par.radius = PARTICLE_RAD;
@@ -100,6 +100,14 @@ double poly6Kern(double r, double h) {
     return 0.0;
 }
 
+double spikyKern(double r, double h) {
+    double cofactor = 15.0 / (M_PI * pow(h, 6.0));
+    if (r <= h && r >= 0.0) {
+        return cofactor * pow((h - r),3.0);
+    }
+    return 0.0;
+}
+
 void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) {
     for (Particle &par : particles) {
         par.forces[1] = -GRAV_CONST;
@@ -122,6 +130,7 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
         neighbor_map[key].push_back(par);
 
     }
+
     for (Particle& par : particles) {
         dvec3 flooredvec = floor(par.x_approx / h);
         std::string key = glm::to_string(flooredvec);
@@ -146,8 +155,9 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
 
 
     // Forces on particle;
-    int numIters = 5;
-    double rho_0 = VOLUME_DENSITY;
+    int numIters = 10;
+    // double rho_0 = VOLUME_DENSITY;
+    double rho_0 = 1000.0;
     dvec3 r;
     double rlen;
     for (int i = 0; i < numIters; i++) {
@@ -162,11 +172,11 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
                 r = par.x_approx - n.x_approx;
                 rlen = length(r);
                 if (rlen > 0.0) {
-                denom += pow(length((45.0 / (M_PI * pow(h,6.0))) * pow((h - rlen), 2.0) * (r / rlen)), 2.0);
-                fprintf(stderr, "denom: %f\n",denom);
-                fprintf(stderr, "rlen %f h %f i %u\n",rlen, h, i);
-                fprintf(stderr, "grad %f\n", 45.0 / (M_PI * pow(h,6.0)));
-            }
+                    denom += pow(length((45.0 / (M_PI * pow(h,6.0))) * pow((h - rlen), 2.0) * (r / rlen)), 2.0);
+                    // fprintf(stderr, "denom: %f\n",denom);
+                    // fprintf(stderr, "rlen %f h %f i %u\n",rlen, h, i);
+                    // fprintf(stderr, "grad %f\n", 45.0 / (M_PI * pow(h,6.0)));
+                }
             }
 
 
@@ -178,11 +188,12 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
 
             // fprintf(stderr, "rho_i %f rho_0 %f\n", rho_i, rho_0);
 
-            par.lambda_i = ((par.rho_i / rho_0) - 1.0);
+            par.lambda_i = -1 * ((par.rho_i / rho_0) - 1.0);
             par.lambda_i /= denom;
 
         }
 
+        double s_corr = 0;
         for (Particle& par : particles) {
             dvec3 correction(0.0,0.0,0.0);
 
@@ -193,8 +204,9 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
             if ((par.x_approx[0] != n.x_approx[0] && par.x_approx[1] != n.x_approx[1] && par.x_approx[2] != n.x_approx[2])) {
                 r = par.x_approx - n.x_approx;
                 rlen = length(r);
+                s_corr = .001 * pow(spikyKern(rlen, h) / spikyKern(.01*h, h), 4.0);
                 dvec3 grad = (45.0 / (M_PI * pow(h,6.0))) * pow((h - rlen), 2.0) * (r / rlen);
-                correction += (par.lambda_i + n.lambda_i) * grad;
+                correction += (par.lambda_i + n.lambda_i + s_corr) * grad;
               }
                 
             }
@@ -213,6 +225,8 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
                      avg += temp - par.x_approx;
                      count += 1;
                  }
+
+            }
              
              if (count != 0) {
                  par.x_approx += (avg / count);
@@ -271,8 +285,8 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
         par.x = par.x_approx;
 
     }
-    }
-    }
+
+}
         
 
 
