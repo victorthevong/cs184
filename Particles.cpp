@@ -30,6 +30,7 @@ const double render_step = 3;
 
 Particles::Particles() 
 {
+
     int nx = 10;
     int ny = 15;
     int nz = 10;
@@ -171,12 +172,14 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
                 rho_i += poly6Kern(length(par.x_approx - n.x_approx), h);
                 r = par.x_approx - n.x_approx;
                 rlen = length(r);
+
                 if (rlen > 0.0) {
                     denom += pow(length((45.0 / (M_PI * pow(h,6.0))) * pow((h - rlen), 2.0) * (r / rlen)), 2.0);
                     // fprintf(stderr, "denom: %f\n",denom);
                     // fprintf(stderr, "rlen %f h %f i %u\n",rlen, h, i);
                     // fprintf(stderr, "grad %f\n", 45.0 / (M_PI * pow(h,6.0)));
                 }
+
             }
 
 
@@ -185,10 +188,14 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
             denom /= rho_0;
 
             par.rho_i = rho_i;
+            
+            //fprintf((stderr), "%f \n", par.rho_i);
+            //fprintf(stderr, "rho_i %f rho_0 %f\n", rho_i, rho_0);
 
             // fprintf(stderr, "rho_i %f rho_0 %f\n", rho_i, rho_0);
 
             par.lambda_i = -1 * ((par.rho_i / rho_0) - 1.0);
+
             par.lambda_i /= denom;
 
         }
@@ -231,7 +238,7 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
              if (count != 0) {
                  par.x_approx += (avg / count);
              }
-            
+
             for (Polygon poly : polys) {
 
                 dvec3 origin = par.x;
@@ -281,7 +288,7 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
 
     for (Particle &par : particles) {
         par.v = (1/render_step) * (par.x_approx - par.x);
-        //vorticity and viscosity
+        //vorticity and viscosity   
         par.x = par.x_approx;
 
     }
