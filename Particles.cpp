@@ -27,6 +27,10 @@ const double PARTICLE_RAD = 0.05;
 const double VOLUME_DENSITY = .001; //In g / mm^3
 const double render_step = 3;
 
+dvec3 max = dvec3(1.0,1.0,1.0);
+dvec3 min = dvec3(-1.0,-1.0,-1.0);
+
+
 
 Particles::Particles() 
 {
@@ -45,7 +49,7 @@ Particles::Particles()
             for(int z=0; z<nz; z++)
             {  
                 Particle par;
-                par.x = glm::dvec3((x+0.5-nx*0.5)*d, (y+10.0)*d-1.0, (z+0.5-nz*0.5)*d);
+                par.x = glm::dvec3((x+0.5-nx*0.5)*d, (y+4.0)*d-1.0, (z+0.5-nz*0.5)*d);
                 par.forces = glm::dvec3(0, 0, 0);
                 par.mass = mass;
                 par.radius = PARTICLE_RAD;
@@ -211,7 +215,7 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
             if ((par.x_approx[0] != n.x_approx[0] && par.x_approx[1] != n.x_approx[1] && par.x_approx[2] != n.x_approx[2])) {
                 r = par.x_approx - n.x_approx;
                 rlen = length(r);
-                s_corr = .001 * pow(spikyKern(rlen, h) / spikyKern(.01*h, h), 4.0);
+                s_corr = .005 * pow(spikyKern(rlen, h) / spikyKern(.01*h, h), 4.0);
                 dvec3 grad = (45.0 / (M_PI * pow(h,6.0))) * pow((h - rlen), 2.0) * (r / rlen);
                 correction += (par.lambda_i + n.lambda_i + s_corr) * grad;
               }
@@ -278,9 +282,9 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
             double count = 0;
              dvec3 avg(0.0,0.0,0.0);
              for (Particle& p2 : particles) {
-                 if (length(par.x_approx - p2.x_approx) < (2.2*PARTICLE_RAD) && (par.x_approx[0] != p2.x_approx[0] && par.x_approx[1] != p2.x_approx[1] && par.x_approx[2] != p2.x_approx[2])) {
+                 if (length(par.x_approx - p2.x_approx) < (2.5*PARTICLE_RAD) && (par.x_approx[0] != p2.x_approx[0] && par.x_approx[1] != p2.x_approx[1] && par.x_approx[2] != p2.x_approx[2])) {
                      dvec3 unitvec = (par.x_approx - p2.x_approx) / length(par.x_approx - p2.x_approx);
-                     dvec3 temp = p2.x_approx + ((2.2*PARTICLE_RAD) * unitvec);
+                     dvec3 temp = p2.x_approx + ((2.5*PARTICLE_RAD) * unitvec);
                      avg += temp - par.x_approx;
                      count += 1;
                  }
@@ -307,6 +311,35 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
         par.v = (1/render_step) * (par.x_approx - par.x);
         //vorticity and viscosity   
         par.x = par.x_approx;
+
+        float friction = .5;
+
+        //reflect x position
+        if (par.x.x > max.x){
+            par.x.x = max.x-(par.x.x-max.x);
+            par.v.x = -par.v.x*friction;
+        }else if(par.x.x < min.x){
+            par.x.x = min.x+(min.x-par.x.x);
+            par.v.x = -par.v.x*friction;
+        }
+
+        //reflect y position
+        if (par.x.y > max.y){
+            par.x.y = max.y-(par.x.y-max.y);
+            par.v.y = -par.v.y*friction;
+        }else if(par.x.y<min.y){
+            par.x.y = min.y+(min.y-par.x.y);
+            par.v.y  = -par.v.y *friction;
+        }
+
+        //reflect z position
+        if (par.x.z>max.z){
+            par.x.z = max.z-(par.x.z-max.z);
+            par.v.z = -par.v.z*friction;
+        }else if(par.x.z<min.z){
+            par.x.z = min.z+(min.z-par.x.z);
+            par.v.z= -par.v.z*friction;
+        }
 
     }
 
