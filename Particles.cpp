@@ -223,21 +223,21 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
 
              // fprintf(stderr, "correction_vec %s\n", glm::to_string(par.correction_vec).c_str());
              // collisions
-             double count = 0;
-             dvec3 avg(0.0,0.0,0.0);
-             for (Particle& p2 : particles) {
-                 if (length(par.x_approx - p2.x_approx) < (2.2*PARTICLE_RAD) && (par.x_approx[0] != p2.x_approx[0] && par.x_approx[1] != p2.x_approx[1] && par.x_approx[2] != p2.x_approx[2])) {
-                     dvec3 unitvec = (par.x_approx - p2.x_approx) / length(par.x_approx - p2.x_approx);
-                     dvec3 temp = p2.x_approx + ((2.2*PARTICLE_RAD) * unitvec);
-                     avg += temp - par.x_approx;
-                     count += 1;
-                 }
+            //  double count = 0;
+            //  dvec3 avg(0.0,0.0,0.0);
+            //  for (Particle& p2 : particles) {
+            //      if (length(par.x_approx - p2.x_approx) < (2.2*PARTICLE_RAD) && (par.x_approx[0] != p2.x_approx[0] && par.x_approx[1] != p2.x_approx[1] && par.x_approx[2] != p2.x_approx[2])) {
+            //          dvec3 unitvec = (par.x_approx - p2.x_approx) / length(par.x_approx - p2.x_approx);
+            //          dvec3 temp = p2.x_approx + ((2.2*PARTICLE_RAD) * unitvec);
+            //          avg += temp - par.x_approx;
+            //          count += 1;
+            //      }
 
-            }
+            // }
              
-             if (count != 0) {
-                 par.x_approx += (avg / count);
-             }
+            //  if (count != 0) {
+            //      par.x_approx += (avg / count);
+            //  }
 
             for (Polygon poly : polys) {
 
@@ -273,6 +273,23 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
                 } 
 
             }
+
+
+            double count = 0;
+             dvec3 avg(0.0,0.0,0.0);
+             for (Particle& p2 : particles) {
+                 if (length(par.x_approx - p2.x_approx) < (2.2*PARTICLE_RAD) && (par.x_approx[0] != p2.x_approx[0] && par.x_approx[1] != p2.x_approx[1] && par.x_approx[2] != p2.x_approx[2])) {
+                     dvec3 unitvec = (par.x_approx - p2.x_approx) / length(par.x_approx - p2.x_approx);
+                     dvec3 temp = p2.x_approx + ((2.2*PARTICLE_RAD) * unitvec);
+                     avg += temp - par.x_approx;
+                     count += 1;
+                 }
+
+            }
+             
+             if (count != 0) {
+                 par.x_approx += (avg / count);
+             }
             
         }
 
