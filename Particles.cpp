@@ -27,6 +27,7 @@ const double PARTICLE_RAD = 0.05;
 const double VOLUME_DENSITY = .001; //In g / mm^3
 const double render_step = 3;
 
+// min and max corners of box used
 dvec3 max = dvec3(1.0,1.0,1.0);
 dvec3 min = dvec3(-1.0,-1.0,-1.0);
 
