@@ -22,7 +22,7 @@
 
 typedef glm::ivec3 ivec3;
 
-const double GRAV_CONST = .001; // Gravitational constant
+const double GRAV_CONST = .01; // Gravitational constant
 const double PARTICLE_RAD = 0.05;
 const double VOLUME_DENSITY = .001; //In g / mm^3
 const double render_step = 3;
@@ -226,9 +226,9 @@ void Particles::step(std::vector<Polygon> polys, std::vector<glm::dvec3> verts) 
              double count = 0;
              dvec3 avg(0.0,0.0,0.0);
              for (Particle& p2 : particles) {
-                 if (length(par.x_approx - p2.x_approx) < (2.0*PARTICLE_RAD) && (par.x_approx[0] != p2.x_approx[0] && par.x_approx[1] != p2.x_approx[1] && par.x_approx[2] != p2.x_approx[2])) {
+                 if (length(par.x_approx - p2.x_approx) < (2.2*PARTICLE_RAD) && (par.x_approx[0] != p2.x_approx[0] && par.x_approx[1] != p2.x_approx[1] && par.x_approx[2] != p2.x_approx[2])) {
                      dvec3 unitvec = (par.x_approx - p2.x_approx) / length(par.x_approx - p2.x_approx);
-                     dvec3 temp = p2.x_approx + ((2.0*PARTICLE_RAD) * unitvec);
+                     dvec3 temp = p2.x_approx + ((2.2*PARTICLE_RAD) * unitvec);
                      avg += temp - par.x_approx;
                      count += 1;
                  }
