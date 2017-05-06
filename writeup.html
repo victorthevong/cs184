@@ -1,0 +1,50 @@
+<style type="text/css">
+	body {
+		font-family: "Verdana", Geneva, sans-serif;
+		font-size: 11pt;
+	}
+</style>
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Fluid Simulation</title>
+</head>
+<body>
+<h1>Introduction</h1>
+<p>Fluid dynamics are involced in a large portion of interesting scenes that computer graphics aims to render convincingly. From oceans to rainy cities, water and other fluids add more dynamism to a scene and lend believability to a render if done succesfuly. In this project, we aimed to simulate fluids with a particle based algorithm. With some calculus and using the OpenGL framework, we attempted to render a system of particles that not only emulated real world liquids, but could also be rendered efficiently.</p>
+<h1>The setup</h1>
+<p>In order to implement our simulation, we first required a framework. Beginning with a template, provided by CS184 staff, we needed to add two key functional components to suit our needs. The first was a way to store and render geometry in the scene other than the particles. To do this, we construct meshes in Blender, a commonly used rendering tool, and then export those scenes to an obj format. Using this file, we parse the given vertex and face information into arrays of vertices representing points, and arrays of polygons representing faces. This functionality makes our modeling more robust, as it allows for more complicated meshes, that can not be hardcoded like the cube that we include in our examples. </p>
+<p>The second functional item that we needed to create was a way of stitching together snapshots from the simulation into one, uninterupted video stream. To do this, we take frame by frame screenshots of the camera view, and store them in a directory. We then take these frames and stitch them together using the standard OpenCV framework. This system allows the user to record their render as it is taking place, but is also smooth through user pauses and slowdown due to computational struggle. This means that if you record some number of iterations of the simulation, your frame rate remains constant, based on your given parameters.
+<img src="images/vid_code.png"></p>
+<h1>The Algorithm</h1>
+In this project, we implemented the algorithm mentioned in Mackler and Müller, which breaks the fluid simulation into several discrete steps.
+<ol>
+	<li>
+		<p>Use known forces to estimate the velocity of the particle. Using this velocity, estimate a new position, which we will improve upon later.</p> 
+	</li>
+	<li>
+		<p>Find neighboring particles. This allows us to efficiently make future computations</p>
+	</li>
+	<li>
+		<p>Begin iterations</p>
+	</li>
+	<li>
+		<p>For all particles calculate &lambda;</p>
+	</li>
+	<li>
+		<p>For all particles calculate position update vector</p>
+	</li>
+	<li>
+		<p>For all particles update the new position by adding in correction vector. If iterations not finished, loop to 4.<p>
+	</li>
+	<li>
+		<p>Update velocity and position.</p>
+	</li>
+</ol>
+<h1>Finding Neighbors</h1>	
+<p>In order to achieve a reasonable run time, we needed to avoid an O(n<sup>2</sup>) neighbor-find operation. This is the naive implementation.</p>
+<p>To avoid this, we utilize positional hashing. We construct a map that maps uniform cubes in space to bins, and then we take a pass through our particle array, storing a vector of neighbors for each one by checking its bin in the map as well as all neighboring bins in a 3x3x3 cube (we need to check neighboring bins to be sure we don't miss points close to bin boundaries). This is the loop with bin hashing:</p>
+<h1>Calculating &lambda; for each particle.</h1>
+<p>One of the main properties that govern how a fluid interacts with its surroundings is the concept of incompressibility. This is the idea that the mass density of a fluid is relatively constant throughout its body. It is <i>incompressable</i>. To model this, we construct a system of constraints C<sub>i</sub> where the i-th constraint </p>
+</body>
+</html>
